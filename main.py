@@ -1,5 +1,6 @@
 from config import *
 from FilmowParser import FilmowParser
+import json
 
 def movieCmp(movie1, movie2):
     duration1 = int(movie1['duration'].split(' ')[0])
@@ -17,6 +18,8 @@ def main():
     moviesVec = filmowparser.getWantToSeeMovies()
     moviesVec.sort(cmp=movieCmp)
     print moviesVec
+    with open('movies.json', 'w') as file:
+        json.dump(moviesVec, file, sort_keys=True, indent=4, separators=(',',': '))
 
 if __name__ == '__main__':
     main()
