@@ -1,5 +1,7 @@
 import urllib2
 from BeautifulSoup import BeautifulSoup
+from threading import Thread
+import time
 
 class FilmowParser():
     def __init__(self, baseURL, username):
@@ -17,10 +19,12 @@ class FilmowParser():
        'Accept-Language': 'en-US,en;q=0.8',
        'Connection': 'keep-alive'}
         searchURL = self.baseURL + '/usuario/' + self.username + '/quero-ver/';
+
         moviesVec = []
 
-        #looping through all the pages of 'want to see' movies
-        for i in range(1, self.getWantToSeePages() +1):
+        threadList = []
+
+        def parsePage(i):
             wantToSeeCatalogueHTML = urllib2.urlopen(urllib2.Request(searchURL + '?pagina=' + str(i) , headers=hdr))
             catalogueSoup = BeautifulSoup(wantToSeeCatalogueHTML)
             print searchURL + '?pagina=' + str(i)
@@ -37,4 +41,16 @@ class FilmowParser():
                 movie['duration'] = str(moviePageSoup.find('span',{'class':'running_time'}).string)
                 print movie
                 moviesVec.append(movie)
+
+        #looping through all the pages of 'want to see' movies
+        for i in range(1, self.getWantToSeePages() +1):
+
+            thread = Thread(target=parsePage, args=(i,))
+            thread.start()
+            time.sleep(0.1)
+            threadList.append(thread)
+
+        for thread in threadList:
+            thread.join()
+
         return moviesVec
