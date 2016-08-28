@@ -1,5 +1,5 @@
-import urllib2
-from BeautifulSoup import BeautifulSoup
+import urllib.request, urllib.error, urllib.parse
+from bs4 import BeautifulSoup
 from threading import Thread
 import time
 
@@ -25,21 +25,21 @@ class FilmowParser():
         threadList = []
 
         def parsePage(i):
-            wantToSeeCatalogueHTML = urllib2.urlopen(urllib2.Request(searchURL + '?pagina=' + str(i) , headers=hdr))
+            wantToSeeCatalogueHTML = urllib.request.urlopen(urllib.request.Request(searchURL + '?pagina=' + str(i) , headers=hdr))
             catalogueSoup = BeautifulSoup(wantToSeeCatalogueHTML)
-            print searchURL + '?pagina=' + str(i)
+            print(searchURL + '?pagina=' + str(i))
             #looping through each movie in the current page
             for movieDiv in catalogueSoup.findAll('li', { 'class': 'span2 movie_list_item'}):
                 divSoup = BeautifulSoup(str(movieDiv))
                 moviehref = str(divSoup.find("a")['href'])
-                print moviehref
+                print(moviehref)
                 movieURL = self.baseURL + moviehref
                 movie  = {}
-                moviePageHtml = urllib2.urlopen(urllib2.Request(movieURL, headers=hdr))
+                moviePageHtml = urllib.request.urlopen(urllib.request.Request(movieURL, headers=hdr))
                 moviePageSoup = BeautifulSoup(moviePageHtml)
                 movie['name'] = str(moviePageSoup.find('h2',{'class':'movie-original-title'}).string)
                 movie['duration'] = str(moviePageSoup.find('span',{'class':'running_time'}).string)
-                print movie
+                print(movie)
                 moviesVec.append(movie)
 
         #looping through all the pages of 'want to see' movies
