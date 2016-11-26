@@ -52,9 +52,7 @@ class FilmowParser():
         def worker():
             while True:
                 work = q.get()
-                if work == None:
-                    break
-                elif work['type'] == 'page':
+                if work['type'] == 'page':
                     parsePage(work['url'])
                 elif work['type'] == 'movie':
                     parseMovie(work['url'])
@@ -62,19 +60,15 @@ class FilmowParser():
 
         for i in range(nThreads):
             t = Thread(target = worker)
-            #t.daemon = True
+            t.daemon = True
             t.start()
             threadList.append(t)
 
         for i in range(1, self.getWantToSeePages() + 1):
             pageUrl = searchURL + '?pagina=' + str(i)
             q.put({'type':'page', 'url':pageUrl})
-
+        
+        #block until all tasks are done
         q.join()
-
-        for i in range(nThreads):
-            q.put(None)
-        for t in threadList:
-            t.join()
 
         return moviesVec
