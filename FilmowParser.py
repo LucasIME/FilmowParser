@@ -26,17 +26,17 @@ class FilmowParser():
 
         def parsePage(i):
             wantToSeeCatalogueHTML = urllib.request.urlopen(urllib.request.Request(searchURL + '?pagina=' + str(i) , headers=hdr))
-            catalogueSoup = BeautifulSoup(wantToSeeCatalogueHTML)
+            catalogueSoup = BeautifulSoup(wantToSeeCatalogueHTML, 'html.parser')
             print(searchURL + '?pagina=' + str(i))
             #looping through each movie in the current page
             for movieDiv in catalogueSoup.findAll('li', { 'class': 'span2 movie_list_item'}):
-                divSoup = BeautifulSoup(str(movieDiv))
+                divSoup = BeautifulSoup(str(movieDiv), 'html.parser')
                 moviehref = str(divSoup.find("a")['href'])
                 print(moviehref)
                 movieURL = self.baseURL + moviehref
                 movie  = {}
                 moviePageHtml = urllib.request.urlopen(urllib.request.Request(movieURL, headers=hdr))
-                moviePageSoup = BeautifulSoup(moviePageHtml)
+                moviePageSoup = BeautifulSoup(moviePageHtml, 'html.parser')
                 movie['name'] = str(moviePageSoup.find('h2',{'class':'movie-original-title'}).string)
                 movie['duration'] = str(moviePageSoup.find('span',{'class':'running_time'}).string)
                 print(movie)
