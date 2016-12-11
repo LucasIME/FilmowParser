@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 from threading import Thread
 import time
 import queue
+from ThreadPool import ThreadPool
 
 class FilmowParser():
     def __init__(self, baseURL, username):
@@ -23,10 +24,15 @@ class FilmowParser():
 
         moviesVec = []
 
-        threadList = []
+        def worker(work):
+            if work['type'] == 'page':
+                parsePage(work['url'])
+            elif work['type'] == 'movie':
+                parseMovie(work['url'])
 
-        q = queue.Queue()
         nThreads = 8
+        threadPool = ThreadPool(nThreads, worker)
+        threadPool.startWorking()
 
         def parsePage(pageUrl):
             wantToSeeCatalogueHTML = urllib.request.urlopen(urllib.request.Request(pageUrl, headers=hdr))
@@ -38,7 +44,7 @@ class FilmowParser():
                 moviehref = str(divSoup.find("a")['href'])
                 print(moviehref)
                 movieURL = self.baseURL + moviehref
-                q.put({'type':'movie', 'url':movieURL})
+                threadPool.putInQueue({'type':'movie', 'url':movieURL})
         
         def parseMovie(movieURL):
             movie  = {}
@@ -49,26 +55,11 @@ class FilmowParser():
             print(movie)
             moviesVec.append(movie)
 
-        def worker():
-            while True:
-                work = q.get()
-                if work['type'] == 'page':
-                    parsePage(work['url'])
-                elif work['type'] == 'movie':
-                    parseMovie(work['url'])
-                q.task_done()
-
-        for i in range(nThreads):
-            t = Thread(target = worker)
-            t.daemon = True
-            t.start()
-            threadList.append(t)
-
         for i in range(1, self.getWantToSeePages() + 1):
             pageUrl = searchURL + '?pagina=' + str(i)
-            q.put({'type':'page', 'url':pageUrl})
+            threadPool.putInQueue({'type':'page', 'url':pageUrl})
         
         #block until all tasks are done
-        q.join()
+        threadPool.end()
 
         return moviesVec
