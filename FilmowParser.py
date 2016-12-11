@@ -4,6 +4,8 @@ from threading import Thread
 import time
 import queue
 from ThreadPool import ThreadPool
+from NetflixWrapper import NetflixWrapper
+
 
 class FilmowParser():
     def __init__(self, baseURL, username):
@@ -23,12 +25,15 @@ class FilmowParser():
         searchURL = self.baseURL + '/usuario/' + self.username + '/quero-ver/';
 
         moviesVec = []
+        netflixVec = []
 
         def worker(work):
             if work['type'] == 'page':
                 parsePage(work['url'])
             elif work['type'] == 'movie':
                 parseMovie(work['url'])
+            elif work['type'] == 'netflix':
+                checkNetflix(work['title'])
 
         nThreads = 8
         threadPool = ThreadPool(nThreads, worker)
@@ -47,13 +52,20 @@ class FilmowParser():
                 threadPool.putInQueue({'type':'movie', 'url':movieURL})
         
         def parseMovie(movieURL):
-            movie  = {}
+            movie = {}
             moviePageHtml = urllib.request.urlopen(urllib.request.Request(movieURL, headers=hdr))
             moviePageSoup = BeautifulSoup(moviePageHtml, 'html.parser')
             movie['name'] = str(moviePageSoup.find('h2',{'class':'movie-original-title'}).string)
             movie['duration'] = str(moviePageSoup.find('span',{'class':'running_time'}).string)
             print(movie)
             moviesVec.append(movie)
+            threadPool.putInQueue({'type':'netflix', 'title':movie['name']})
+
+        def checkNetflix(title):
+            netflixWrapper = NetflixWrapper()
+            resp = netflixWrapper.isTitleInNetflix(title)
+            if(resp[0]):
+                netflixVec.append(resp[1])
 
         for i in range(1, self.getWantToSeePages() + 1):
             pageUrl = searchURL + '?pagina=' + str(i)
@@ -62,4 +74,4 @@ class FilmowParser():
         #block until all tasks are done
         threadPool.end()
 
-        return moviesVec
+        return [moviesVec, netflixVec]

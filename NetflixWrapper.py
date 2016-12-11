@@ -13,4 +13,3 @@ class NetflixWrapper:
             jsonResponse= json.loads(response.read().decode())
             print("%s is in Netflix!" % title)
             return (True, jsonResponse)
-
