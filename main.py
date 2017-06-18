@@ -15,6 +15,9 @@ def netflixStrToInt(input):
         durationInt = int(durationStr.split(' ')[0])
     return durationInt
 
+def filterNetflix(moviesVec):
+    return [ {'runtime' : movie['runtime'], 'Title' : movie['show_title'], 'rating':movie['rating']} for movie in moviesVec]
+
 def main():
     filmowparser = FilmowParser(config['filmowURL'], config['filmowUsername'])
 
@@ -37,6 +40,7 @@ def main():
 
     netflixVec.sort(key=netflixStrToInt)
     print(netflixVec)
+    netflixVec = filterNetflix(netflixVec)
     with open('netflix.json', 'w') as file:
         json.dump(netflixVec, file, sort_keys=True, indent=4, separators=(',',': '), ensure_ascii=False)
 
