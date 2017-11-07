@@ -3,18 +3,17 @@ from threading import Thread
 import urllib.request, urllib.error, urllib.parse
 
 class ThreadPool:
-    def __init__(self, n, workerFunc):
+    def __init__(self, n):
         self.nThreads = n
         self.queue = queue.Queue()
-        self.workerFunc = workerFunc
 
     def startWorking(self):
         self.spawnThreads()
 
     def worker(self):
         while True:
-            work = self.queue.get()
-            self.workerFunc(work)
+            work, args = self.queue.get()
+            work(**args)
             self.queue.task_done()
 
     def spawnThreads(self):
@@ -26,5 +25,5 @@ class ThreadPool:
     def end(self):
         self.queue.join()
 
-    def putInQueue(self, arg):
-        self.queue.put(arg)
+    def putInQueue(self, func, args_dict):
+        self.queue.put((func, args_dict))
